@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+    <meta charset="UTF-8">
+    <title>Rhythm Climax: Edging Simulator (18+)</title>
+    <style>
+        body {
+            margin: 0;
+            background: radial-gradient(circle at center, #2b0920 0%, #0d020a 100%);
+            color: #ffe5f0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
+        }
+        #game-container {
+            display: flex;
+            width: 950px;
+            height: 620px;
+            background: rgba(25, 5, 20, 0.85);
+            border: 3px solid #ff2a85;
+            border-radius: 16px;
+            box-shadow: 0 0 45px rgba(255, 42, 133, 0.4);
+            overflow: hidden;
+            position: relative;
+        }
+        /* Bal oldali státusz panel */
+        .panel {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        #left-panel {
+            width: 280px;
+            border-right: 2px solid rgba(255, 42, 133, 0.3);
+            background: rgba(15, 2, 12, 0.6);
+        }
+        #center-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        #right-panel {
+            width: 280px;
+            border-left: 2px solid rgba(255, 42, 133, 0.3);
+            background: rgba(15, 2, 12, 0.6);
+        }
+        h2 {
+            margin: 0;
+            color: #ff2a85;
+            font-size: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 0 0 10px rgba(255, 42, 133, 0.6);
+        }
+        .bar-label {
+            font-size: 14px;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            color: #ffb3d1;
+        }
+        .bar-bg {
+            width: 100%;
+            height: 22px;
+            background: #1a0513;
+            border: 2px solid #731540;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        .bar-fill {
+            height: 100%;
+            width: 0%;
+            transition: width 0.08s linear;
+        }
+        #arousal-fill {
+            background: linear-gradient(90deg, #ff66a3, #ff0066, #ffcc00);
+            box-shadow: 0 0 15px #ff0066;
+        }
+        #stamina-fill {
+            background: linear-gradient(90deg, #00b4d8, #00f5d4);
+        }
+        /* Érzékeny (Edging) Zóna jelölés az élvezet csíkon */
+        #edge-zone {
+            position: absolute;
+            top: 0;
+            left: 80%;
+            width: 15%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.25);
+            border-left: 2px dashed #fff;
+            border-right: 2px dashed #fff;
+        }
+        .stat-box {
+            background: rgba(255, 42, 133, 0.1);
+            border: 1px solid rgba(255, 42, 133, 0.3);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-val {
+            font-size: 26px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 0 0 10px #ff2a85;
+        }
+        /* Shop Gombok */
+        .shop-btn {
+            background: linear-gradient(135deg, #4a0e32, #29061b);
+            border: 2px solid #ff2a85;
+            color: #fff;
+            padding: 12px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.15s;
+        }
+        .shop-btn:hover:not(:disabled) {
+            background: #ff2a85;
+            color: #1a000d;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 42, 133, 0.5);
+        }
+        .shop-btn:disabled {
+            opacity: 0.45;
+            border-color: #555;
+            cursor: not-allowed;
+        }
+        .shop-title { font-weight: bold; font-size: 15px; display: flex; justify-content: space-between; }
+        .shop-desc { font-size: 12px; opacity: 0.85; margin-top: 4px; }
+
+        #mood-text {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff99c2;
+            text-align: center;
+            min-height: 28px;
+            margin-bottom: 10px;
+            text-shadow: 0 0 8px rgba(255, 0, 102, 0.8);
+        }
+        canvas {
+            border-radius: 12px;
+            cursor: grab;
+        }
+        canvas:active {
+            cursor: grabbing;
+        }
+        #instructions {
+            font-size: 13px;
+            color: #cca3b5;
+            text-align: center;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <!-- BAL PANEL: Élettani mutatók -->
+    <div class="panel" id="left-panel">
+        <h2>Állapot (18+)</h2>
+
+        <div>
+            <div class="bar-label">
+                <span>🔥 Izgalmi szint (Arousal)</span>
+                <span id="arousal-pct">0%</span>
+            </div>
+            <div class="bar-bg">
+                <div id="edge-zone" title="Edging Zóna (3x Pont!)"></div>
+                <div class="bar-fill" id="arousal-fill"></div>
+            </div>
+            <div style="font-size: 11px; color: #ff99c2; margin-top: 3px;">
+                Tipp: Tartsd a fehér "Edging" zónában (80-95%) a 3x szorzóért!
+            </div>
+        </div>
+
+        <div>
+            <div class="bar-label">
+                <span>⚡ Állóképesség (Stamina)</span>
+                <span id="stamina-pct">100%</span>
+            </div>
+            <div class="bar-bg">
+                <div class="bar-fill" id="stamina-fill" style="width: 100%;"></div>
+            </div>
+        </div>
+
+        <div class="stat-box">
+            <div style="font-size:13px; color:#ffb3d1;">💦 Élvezet Pontok</div>
+            <div class="stat-val" id="score-val">0</div>
+        </div>
+
+        <div class="stat-box">
+            <div style="font-size:13px; color:#ffb3d1;">🏆 Orgazmusok (Climax)</div>
+            <div class="stat-val" id="climax-val">0</div>
+        </div>
+
+        <div class="stat-box">
+            <div style="font-size:13px; color:#ffb3d1;">❤️ Pulzus & Ritmus</div>
+            <div class="stat-val" id="bpm-val">65 BPM</div>
+        </div>
+    </div>
+
+    <!-- KÖZÉPSŐ PANEL: Interaktív Csúszka & Játéktér -->
+    <div id="center-panel">
+        <div id="mood-text">Kezdd el fel-le húzni, vagy nyomd a W / S gombokat!</div>
+        <canvas id="gameCanvas" width="340" height="470"></canvas>
+        <div id="instructions">
+            <b>EGÉR:</b> Húzd fel-le a gyűrűt! &nbsp;|&nbsp; <b>BILLENTYŰ:</b> W / S vagy Fel / Le nyilak
+        </div>
+    </div>
+
+    <!-- JOBB PANEL: Fejlesztések (Szexshop) -->
+    <div class="panel" id="right-panel">
+        <h2>Segédeszközök</h2>
+
+        <button class="shop-btn" id="btn-lube" onclick="buyUpgrade('lube')">
+            <div class="shop-title"><span>💧 Melegítő Síkosító</span> <span id="cost-lube">50 💦</span></div>
+            <div class="shop-desc">Csökkenti a súrlódást: kevesebb fáradtság és nagyobb sebesség.</div>
+        </button>
+
+        <button class="shop-btn" id="btn-vibe" onclick="buyUpgrade('vibe')">
+            <div class="shop-title"><span>📳 Turbó Vibrátor</span> <span id="cost-vibe">120 💦</span></div>
+            <div class="shop-desc">Automatikusan generálja az élvezetet pihenés közben is.</div>
+        </button>
+
+        <button class="shop-btn" id="btn-ring" onclick="buyUpgrade('ring')">
+            <div class="shop-title"><span>⭕ Edging Gyűrű</span> <span id="cost-ring">200 💦</span></div>
+            <div class="shop-desc">Lassabban esik vissza az izgalmi szint, könnyebb a csúcson maradni!</div>
+        </button>
+
+        <button class="shop-btn" id="btn-stamina" onclick="buyUpgrade('stamina')">
+            <div class="shop-title"><span>💊 Bikacsök Kapszula</span> <span id="cost-stamina">150 💦</span></div>
+            <div class="shop-desc">Azonnali Stamina töltés + gyorsabb regeneráció.</div>
+        </button>
+
+        <div style="margin-top: auto; font-size: 12px; color: #ff80b3; text-align: center; line-height: 1.4;">
+            Ha eléred a 100% Izgalmat, bekövetkezik a <b>CLIMAX</b> (hatalmas pontbónusz!), majd rövid pihenő következik.
+        </div>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+// --- HANGSZINTETIZÁTOR (Súrlódás, Szívverés és Climax hangeffektek) ---
+let audioCtx = null;
+function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+function playStrokeSound(speedRatio) {
+    if (!audioCtx) return;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sine';
+    let baseFreq = 140 + arousal * 2.2 + Math.min(150, speedRatio * 10);
+    osc.frequency.setValueAtTime(baseFreq, audioCtx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(baseFreq * 1.4, audioCtx.currentTime + 0.09);
+
+    gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.09);
+
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 0.09);
+}
+
+function playClimaxSound() {
+    if (!audioCtx) return;
+    [260, 330, 392, 523, 659].forEach((freq, idx) => {
+        setTimeout(() => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(freq * 1.5, audioCtx.currentTime + 0.35);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.35);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.35);
+        }, idx * 110);
+    });
+}
+
+// --- JÁTÉK VÁLTOZÓK ---
+let arousal = 0;         // 0 - 100%
+let stamina = 100;       // 0 - 100%
+let score = 0;
+let climaxes = 0;
+let cooldown = 0;        // Climax utáni érzékenységi pihenő
+
+// Fejlesztések szintjei és árai
+let upgrades = {
+    lube: { lvl: 0, cost: 50, power: 1.25 },
+    vibe: { lvl: 0, cost: 120, power: 0 },
+    ring: { lvl: 0, cost: 200, decayRed: 0 },
+    stamina: { lvl: 0, cost: 150, regen: 0.16 }
+};
+
+// Mozgó gyűrű / kéz pozíciója a tengelyen (0.0 = legfelső, 1.0 = legalsó)
+let handPos = 0.5;
+let targetHandPos = 0.5;
+let lastHandPos = 0.5;
+let strokeDirection = 1; // Billentyűzetes váltáshoz
+let isDragging = false;
+
+// Ideális ritmus célpont (folyamatosan mozog fel-le, ha követed, extra pontot ad)
+let rhythmPhase = 0;
+let rhythmSpeed = 0.04;
+
+// Részecskék és lebegő feliratok
+let particles = [];
+let floatingTexts = [];
+
+// --- IRÁNYÍTÁS (EGÉR ÉS ÉRINTÉS) ---
+canvas.addEventListener('mousedown', e => {
+    initAudio();
+    isDragging = true;
+    updateMousePos(e);
+});
+window.addEventListener('mousemove', e => {
+    if (isDragging) updateMousePos(e);
+});
+window.addEventListener('mouseup', () => isDragging = false);
+
+canvas.addEventListener('touchstart', e => {
+    initAudio();
+    isDragging = true;
+    updateTouchPos(e);
+    e.preventDefault();
+}, {passive: false});
+window.addEventListener('touchmove', e => {
+    if (isDragging) updateTouchPos(e);
+}, {passive: false});
+window.addEventListener('touchend', () => isDragging = false);
+
+function updateMousePos(e) {
+    const rect = canvas.getBoundingClientRect();
+    let y = e.clientY - rect.top;
+    targetHandPos = Math.max(0.05, Math.min(0.95, (y - 70) / (canvas.height - 140)));
+}
+function updateTouchPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    let y = e.touches[0].clientY - rect.top;
+    targetHandPos = Math.max(0.05, Math.min(0.95, (y - 70) / (canvas.height - 140)));
+}
+
+// --- IRÁNYÍTÁS (BILLENTYŰZET: W/S, Nyilak, Space) ---
+window.addEventListener('keydown', e => {
+    if (e.repeat) return;
+    initAudio();
+    if (e.code === 'KeyW' || e.code === 'ArrowUp') {
+        performKeyStroke(0.1);
+    } else if (e.code === 'KeyS' || e.code === 'ArrowDown') {
+        performKeyStroke(0.9);
+    } else if (e.code === 'Space') {
+        e.preventDefault();
+        strokeDirection *= -1;
+        performKeyStroke(strokeDirection > 0 ? 0.88 : 0.12);
+    }
+});
+
+function performKeyStroke(target) {
+    if (stamina < 3 || cooldown > 0) return;
+    targetHandPos = target;
+    processStrokeReward(0.45);
+}
+
+// --- LÖKÉS / MOZDULAT ÉRTÉKELÉSE ---
+function processStrokeReward(distance) {
+    if (cooldown > 0 || stamina <= 1) return;
+
+    let lubeBonus = 1 + upgrades.lube.lvl * 0.35;
+    let isEdging = (arousal >= 80 && arousal <= 95);
+    let edgeMultiplier = isEdging ? 3 : 1;
+
+    // Ellenőrizzük, mennyire van közel a ritmus-jelzőhöz
+    let rhythmTargetY = 0.5 + Math.sin(rhythmPhase) * 0.4;
+    let rhythmAccuracy = 1 - Math.min(1, Math.abs(handPos - rhythmTargetY) * 1.5);
+    let rhythmMult = 1 + rhythmAccuracy;
+
+    let gainArousal = distance * 4.2 * lubeBonus * rhythmMult;
+    let gainPoints = Math.ceil(distance * 8 * lubeBonus * edgeMultiplier * rhythmMult);
+
+    arousal = Math.min(100, arousal + gainArousal);
+    score += gainPoints;
+
+    // Stamina fogyasztás (síkosító csökkenti)
+    let staminaCost = (distance * 3.8) / (1 + upgrades.lube.lvl * 0.25);
+    stamina = Math.max(0, stamina - staminaCost);
+
+    playStrokeSound(distance * 15);
+
+    // Vizuális visszajelzés
+    let cx = canvas.width / 2 + (Math.random() * 60 - 30);
+    let cy = 70 + handPos * (canvas.height - 140);
+    let label = isEdging ? `EDGING! +${gainPoints}💦` : (rhythmAccuracy > 0.7 ? `RITMUS! +${gainPoints}` : `+${gainPoints}`);
+    let color = isEdging ? '#ffea00' : (rhythmAccuracy > 0.7 ? '#ff66b3' : '#ffffff');
+    addFloatingText(label, cx, cy, color);
+    spawnParticles(canvas.width / 2, cy, isEdging ? '#ffea00' : '#ff2a85', 5);
+
+    checkClimax();
+}
+
+function checkClimax() {
+    if (arousal >= 100 && cooldown <= 0) {
+        climaxes++;
+        let climaxBonus = 250 * climaxes;
+        score += climaxBonus;
+        cooldown = 180; // ~3 másodperc érzékeny levezetés
+        playClimaxSound();
+
+        addFloatingText(`💥 CLIMAX! +${climaxBonus} 💦`, canvas.width / 2, 120, '#00f5d4', 24);
+        for (let i = 0; i < 65; i++) {
+            spawnParticles(canvas.width / 2, 75, '#ffffff', 1, true);
+        }
+    }
+}
+
+// --- FEJLESZTÉSEK VÁSÁRLÁSA ---
+function buyUpgrade(type) {
+    initAudio();
+    let up = upgrades[type];
+    if (score < up.cost) return;
+
+    score -= up.cost;
+    up.lvl++;
+    up.cost = Math.floor(up.cost * 1.65);
+
+    if (type === 'vibe') {
+        up.power += 0.06;
+    } else if (type === 'ring') {
+        up.decayRed = Math.min(0.8, up.lvl * 0.2);
+    } else if (type === 'stamina') {
+        stamina = 100;
+        up.regen += 0.07;
+    }
+
+    playStrokeSound(10);
+    updateUI();
+}
+
+// --- JÁTÉK FRISSÍTÉS (60 FPS) ---
+function update() {
+    // Kéz pozíció simítása
+    handPos += (targetHandPos - handPos) * 0.28;
+    let movedDist = Math.abs(handPos - lastHandPos);
+
+    if (isDragging && movedDist > 0.018 && stamina > 1 && cooldown <= 0) {
+        processStrokeReward(movedDist);
+    }
+    lastHandPos = handPos;
+
+    // Ritmus célpont mozgása (gyorsul, ahogy nő az izgalom)
+    rhythmSpeed = 0.035 + (arousal / 100) * 0.055;
+    rhythmPhase += rhythmSpeed;
+
+    // Vibrátor passzív hatása
+    if (upgrades.vibe.lvl > 0 && cooldown <= 0) {
+        arousal = Math.min(100, arousal + upgrades.vibe.power);
+        if (Math.random() < 0.15) {
+            score += upgrades.vibe.lvl;
+            spawnParticles(canvas.width / 2, 220, '#ff66b3', 1);
+        }
+        checkClimax();
+    }
+
+    // Izgalom természetes csökkenése, ha nem csinálsz semmit
+    if (cooldown > 0) {
+        cooldown--;
+        arousal = Math.max(0, arousal - 0.55);
+    } else {
+        let baseDecay = 0.09 * (1 - upgrades.ring.decayRed);
+        arousal = Math.max(0, arousal - baseDecay);
+    }
+
+    // Stamina visszatöltődése
+    stamina = Math.min(100, stamina + upgrades.stamina.regen);
+
+    // Hangulati szöveg frissítése
+    const moodEl = document.getElementById('mood-text');
+    if (cooldown > 0) {
+        moodEl.innerText = "💦 AHHH! CLIMAX! (Túl érzékeny, pihenj picit...)";
+        moodEl.style.color = "#00f5d4";
+    } else if (stamina < 15) {
+        moodEl.innerText = "🥵 Kifulladtál! Várj egy kicsit vagy vegyél Kapszulát!";
+        moodEl.style.color = "#ff4d4d";
+    } else if (arousal >= 80) {
+        moodEl.innerText = "🔥 EDGING ZÓNA (3x PONT)! Mindjárt elélvezel!";
+        moodEl.style.color = "#ffea00";
+    } else if (arousal >= 45) {
+        moodEl.innerText = "💓 Jó a tempó! Tartsd a ritmust a fénylő gyűrűvel!";
+        moodEl.style.color = "#ff80bf";
+    } else {
+        moodEl.innerText = "Kezdd el fel-le húzni, vagy nyomd a W / S gombokat!";
+        moodEl.style.color = "#ffb3d1";
+    }
+
+    // Részecskék és szövegek mozgatása
+    for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.gravity) p.vy += 0.22;
+        p.life--;
+        if (p.life <= 0) particles.splice(i, 1);
+    }
+
+    for (let i = floatingTexts.length - 1; i >= 0; i--) {
+        let ft = floatingTexts[i];
+        ft.y -= 1.2;
+        ft.life--;
+        if (ft.life <= 0) floatingTexts.splice(i, 1);
+    }
+
+    updateUI();
+}
+
+function updateUI() {
+    document.getElementById('arousal-fill').style.width = `${arousal}%`;
+    document.getElementById('arousal-pct').innerText = `${Math.floor(arousal)}%`;
+    document.getElementById('stamina-fill').style.width = `${stamina}%`;
+    document.getElementById('stamina-pct').innerText = `${Math.floor(stamina)}%`;
+
+    document.getElementById('score-val').innerText = Math.floor(score);
+    document.getElementById('climax-val').innerText = climaxes;
+    let bpm = Math.floor(65 + arousal * 1.15);
+    document.getElementById('bpm-val').innerText = `${bpm} BPM`;
+
+    // Shop gombok frissítése
+    for (let key in upgrades) {
+        let up = upgrades[key];
+        document.getElementById(`cost-${key}`).innerText = `${up.cost} 💦`;
+        document.getElementById(`btn-${key}`).disabled = (score < up.cost);
+    }
+}
+
+function addFloatingText(text, x, y, color, size = 16) {
+    floatingTexts.push({ text, x, y, color, size, life: 38 });
+}
+
+function spawnParticles(x, y, color, count, isClimax = false) {
+    for (let i = 0; i < count; i++) {
+        let angle = isClimax ? (-Math.PI / 2 + (Math.random() - 0.5) * 1.4) : (Math.random() * Math.PI * 2);
+        let speed = isClimax ? (4 + Math.random() * 8) : (1 + Math.random() * 3.5);
+        particles.push({
+            x, y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            color: color,
+            size: isClimax ? (5 + Math.random() * 5) : 4,
+            gravity: isClimax,
+            life: isClimax ? (45 + Math.random() * 30) : 22
+        });
+    }
+}
+
+// --- KIRAJZOLÁS (CANVAS) ---
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const cx = canvas.width / 2;
+    const topY = 75;
+    const bottomY = canvas.height - 65;
+    const shaftH = bottomY - topY;
+
+    // Vibrátor rezgés effekt
+    let shakeX = (upgrades.vibe.lvl > 0 && cooldown <= 0) ? (Math.random() - 0.5) * 3 : 0;
+    if (arousal > 80) shakeX += (Math.random() - 0.5) * 4;
+
+    ctx.save();
+    ctx.translate(shakeX, 0);
+
+    // Háttér fényudvar (lüktet az izgalommal)
+    let glowRadius = 55 + (arousal / 100) * 45 + Math.sin(rhythmPhase * 2) * 8;
+    let grad = ctx.createRadialGradient(cx, canvas.height / 2, 10, cx, canvas.height / 2, glowRadius * 1.8);
+    grad.addColorStop(0, `rgba(255, 42, 133, ${0.15 + (arousal / 250)})`);
+    grad.addColorStop(1, 'rgba(255, 42, 133, 0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // 1. Központi Oszlop / Tengely (Stilizált neon forma)
+    let shaftW = 54 + (arousal / 100) * 10; // Enyhén duzzad az izgalomtól
+    let shaftGrad = ctx.createLinearGradient(cx - shaftW/2, 0, cx + shaftW/2, 0);
+    shaftGrad.addColorStop(0, '#991f5c');
+    shaftGrad.addColorStop(0.5, '#ff80bf');
+    shaftGrad.addColorStop(1, '#801349');
+
+    ctx.fillStyle = shaftGrad;
+    ctx.strokeStyle = '#ff2a85';
+    ctx.lineWidth = 3;
+
+    // Törzs
+    ctx.beginPath();
+    ctx.roundRect(cx - shaftW / 2, topY, shaftW, shaftH, 26);
+    ctx.fill();
+    ctx.stroke();
+
+    // Felső csúcs (Kupola)
+    ctx.fillStyle = arousal > 80 ? '#ff3385' : '#ff66b3';
+    ctx.beginPath();
+    ctx.arc(cx, topY + 12, shaftW / 2 + 6, Math.PI, 0, false);
+    ctx.quadraticCurveTo(cx + shaftW / 2 + 6, topY + 26, cx, topY + 26);
+    ctx.quadraticCurveTo(cx - shaftW / 2 - 6, topY + 26, cx - shaftW / 2 - 6, topY + 12);
+    ctx.fill();
+    ctx.stroke();
+
+    // Edging gyűrű (ha megvette a játékos)
+    if (upgrades.ring.lvl > 0) {
+        ctx.fillStyle = '#00f5d4';
+        ctx.fillRect(cx - shaftW / 2 - 6, bottomY - 22, shaftW + 12, 12);
+    }
+
+    // 2. Ideális Ritmus Jelző (Szaggatott fénylő célpont, amit érdemes követni)
+    let rhythmY = topY + (0.5 + Math.sin(rhythmPhase) * 0.4) * shaftH;
+    ctx.strokeStyle = 'rgba(255, 234, 0, 0.75)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([6, 4]);
+    ctx.beginPath();
+    ctx.roundRect(cx - shaftW / 2 - 22, rhythmY - 16, shaftW + 44, 32, 14);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // 3. Játékos által mozgatott Gyűrű / Marok (Stroker)
+    let handY = topY + handPos * shaftH;
+    ctx.fillStyle = isDragging ? '#ffffff' : '#ff0066';
+    ctx.strokeStyle = '#ffea00';
+    ctx.lineWidth = 4;
+
+    ctx.beginPath();
+    ctx.roundRect(cx - shaftW / 2 - 16, handY - 26, shaftW + 32, 52, 22);
+    ctx.fill();
+    ctx.stroke();
+
+    // Fogás csíkok a gyűrűn
+    ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(cx - 18, handY - 10); ctx.lineTo(cx + 18, handY - 10);
+    ctx.moveTo(cx - 18, handY);      ctx.lineTo(cx + 18, handY);
+    ctx.moveTo(cx - 18, handY + 10); ctx.lineTo(cx + 18, handY + 10);
+    ctx.stroke();
+
+    ctx.restore();
+
+    // 4. Részecskék és Lebegő Szövegek
+    for (let p of particles) {
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    for (let ft of floatingTexts) {
+        ctx.fillStyle = ft.color;
+        ctx.font = `bold ${ft.size}px Segoe UI`;
+        ctx.textAlign = 'center';
+        ctx.fillText(ft.text, ft.x, ft.y);
+    }
+}
+
+function loop() {
+    update();
+    draw();
+    requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body>
+</html>
